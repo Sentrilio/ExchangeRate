@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Handling Form Submission</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<h1>Form</h1>
+<p th:text="${info}" />
+
+<form action="#" th:action="@{/exchange}" th:object="${exchange}" method="post">
+    <p>Currency Code:</p>
+    <select th:field="*{currencyCode}">
+        <option th:value="USD" th:text="USD"></option>
+        <option th:value="AUD" th:text="AUD"></option>
+        <option th:value="CAD" th:text="CAD"></option>
+        <option th:value="EUR" th:text="EUR"></option>
+        <option th:value="HUF" th:text="HUF"></option>
+        <option th:value="CHF" th:text="CHF"></option>
+        <option th:value="GBP" th:text="GBP"></option>
+        <option th:value="JPY" th:text="JPY"></option>
+        <option th:value="CZK" th:text="CZK"></option>
+        <option th:value="DKK" th:text="DKK"></option>
+        <option th:value="NOK" th:text="NOK"></option>
+        <option th:value="SEK" th:text="SEK"></option>
+        <option th:value="XDR" th:text="XDR"></option>
+    </select>
+    <!--<p>Currency Code: <input type="text" th:field="*{currencyCode}" /></p>-->
+    <p>Start Date: <input type="date" th:field="*{startDate}"/></p>
+    <p>End Date: <input type="date" th:field="*{endDate}"/></p>
+    <p><input type="submit" value="Submit"/> <input type="reset" value="Reset"/></p>
+</form>
+</body>
+</html>
