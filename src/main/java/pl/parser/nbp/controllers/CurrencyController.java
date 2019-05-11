@@ -39,25 +39,38 @@ public class CurrencyController {
 		LocalDate start = LocalDate.parse(exchange.getStartDate(), formatter);
 		LocalDate end = LocalDate.parse(exchange.getEndDate(), formatter);
 
-//		Date start = new SimpleDateFormat("yyy-MM-dd").parse(exchange.getStartDate());
-//		Date end = new SimpleDateFormat("yyy-MM-dd").parse(exchange.getEndDate());
 		System.out.println(start);
 		System.out.println(end);
 		if (start.isBefore(end)) {
-			for (LocalDate date = start; date.getYear()<=end.getYear(); date = date.plusYears(1)) {
+			int formatedStartDate = (start.getYear() % 100) * 10000 + start.getMonthValue() * 100 + start.getDayOfMonth();
+			int formatedEndDate = (end.getYear() % 100) * 10000 + end.getMonthValue() * 100 + end.getDayOfMonth();
+			System.out.println("Start: " + formatedStartDate);
+			System.out.println("End: " + formatedEndDate);
+
+			for (LocalDate date = start; date.getYear() <= end.getYear(); date = date.plusYears(1)) {
 				String path;
 				if (date.getYear() == 2019) {
 					path = "http://www.nbp.pl/kursy/xml/dir.txt";
 				} else {
 					path = "http://www.nbp.pl/kursy/xml/dir" + date.getYear() + ".txt";
 				}
-				URL oracle = new URL(path);
+				URL nbp = new URL(path);
 				BufferedReader in = new BufferedReader(
-						new InputStreamReader(oracle.openStream()));
+						new InputStreamReader(nbp.openStream()));
 
+				int formatedDateFromTxt;
 				String inputLine;
-				while ((inputLine = in.readLine()) != null)
-					System.out.println(inputLine);
+				while ((inputLine = in.readLine()) != null) {
+					if (inputLine.startsWith("c")) {
+						formatedDateFromTxt = Integer.parseInt(inputLine.substring(inputLine.length() - 6));
+						if (formatedStartDate <= formatedDateFromTxt && formatedDateFromTxt <= formatedEndDate) {
+							System.out.println(formatedDateFromTxt);
+//							formatedStartDate += date.getMonthValue() * 100 + date.getDayOfMonth();
+						}
+//						System.out.println(formatedStartDate);
+//						System.out.println(formatedDateFromTxt);
+					}
+				}
 				in.close();
 			}
 			return "result";
