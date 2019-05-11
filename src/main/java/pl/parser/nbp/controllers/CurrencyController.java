@@ -1,25 +1,31 @@
 package pl.parser.nbp.controllers;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.client.RestTemplate;
 import pl.parser.nbp.model.Exchange;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Scanner;
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+
+import static com.sun.javafx.fxml.expression.Expression.equalTo;
 
 @Controller
 public class CurrencyController {
@@ -34,7 +40,7 @@ public class CurrencyController {
 	}
 
 	@PostMapping("/exchange")
-	public String exchangePost(Model model, @ModelAttribute Exchange exchange) throws ParseException, IOException {
+	public String exchangePost(Model model, @ModelAttribute Exchange exchange) throws Exception {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
 		LocalDate start = LocalDate.parse(exchange.getStartDate(), formatter);
 		LocalDate end = LocalDate.parse(exchange.getEndDate(), formatter);
@@ -64,8 +70,18 @@ public class CurrencyController {
 					if (inputLine.startsWith("c")) {
 						formatedDateFromTxt = Integer.parseInt(inputLine.substring(inputLine.length() - 6));
 						if (formatedStartDate <= formatedDateFromTxt && formatedDateFromTxt <= formatedEndDate) {
-							System.out.println(formatedDateFromTxt);
-//							formatedStartDate += date.getMonthValue() * 100 + date.getDayOfMonth();
+//							System.out.println(formatedDateFromTxt);
+							System.out.println(inputLine);
+
+							RestTemplate restTemplate = new RestTemplate();
+							String fooResourceUrl = "http://www.nbp.pl/kursy/xml/" + inputLine + ".xml";
+							ResponseEntity<String> response
+									= restTemplate.getForEntity(fooResourceUrl, String.class);
+							System.out.println(response.getBody());
+
+//							Document doc = loadTestDocument("http://www.nbp.pl/kursy/xml/"+inputLine+".xml");
+//							System.out.println(doc);
+							break;
 						}
 //						System.out.println(formatedStartDate);
 //						System.out.println(formatedDateFromTxt);
@@ -80,6 +96,12 @@ public class CurrencyController {
 			return "exchange";
 		}
 
-
 	}
+
+	private Document loadTestDocument(String url) throws Exception {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);
+		return factory.newDocumentBuilder().parse(new URL(url).openStream());
+	}
+
 }
