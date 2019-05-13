@@ -1,42 +1,36 @@
 package pl.parser.nbp.controllers;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.NodeType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
-import org.w3c.dom.*;
-import org.xml.sax.SAXException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import pl.parser.nbp.model.Exchange;
+import pl.parser.nbp.model.Rate;
 
-import java.awt.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import pl.parser.nbp.model.Rate;
+public class Controller {
 
-public class CurrencyController {
 
-	public void exchangePost( Exchange exchange) throws Exception {
+	public void exchangePost(Model model, @ModelAttribute Exchange exchange) throws Exception {
 		List<Rate> list = new ArrayList<>();
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
@@ -127,7 +121,7 @@ public class CurrencyController {
 			}
 //			System.out.println("sum of Selling Rates: " + sumofBuyingRates);
 			System.out.println("average of selling rates: "
-					+ sumofBuyingRates.divide(new BigDecimal(list.size()),4, RoundingMode.HALF_UP));
+					+ sumofBuyingRates.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP));
 		} else {
 			String info = "Start date has to be after end date";
 			System.out.println(info);
@@ -137,3 +131,4 @@ public class CurrencyController {
 
 
 }
+
