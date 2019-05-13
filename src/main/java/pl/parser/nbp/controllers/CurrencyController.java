@@ -1,5 +1,6 @@
 package pl.parser.nbp.controllers;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.NodeType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -7,14 +8,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import pl.parser.nbp.model.Exchange;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,13 +25,14 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+import pl.parser.nbp.model.Rate;
 
 @Controller
 public class CurrencyController {
@@ -44,6 +48,8 @@ public class CurrencyController {
 
 	@PostMapping("/exchange")
 	public String exchangePost(Model model, @ModelAttribute Exchange exchange) throws Exception {
+		List<Rate> list = new ArrayList<>();
+
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
 		LocalDate start = LocalDate.parse(exchange.getStartDate(), formatter);
 		LocalDate end = LocalDate.parse(exchange.getEndDate(), formatter);
@@ -64,14 +70,13 @@ public class CurrencyController {
 					path = "http://www.nbp.pl/kursy/xml/dir" + date.getYear() + ".txt";
 				}
 				URL nbp = new URL(path);
-				BufferedReader in = new BufferedReader(
-						new InputStreamReader(nbp.openStream()));
+				BufferedReader in = new BufferedReader(new InputStreamReader(nbp.openStream()));
 
-				int formatedDateFromTxt;
+//				int formatedDateFromTxt;
 				String inputLine;
 				while ((inputLine = in.readLine()) != null) {
 					if (inputLine.startsWith("c")) {
-						formatedDateFromTxt = Integer.parseInt(inputLine.substring(inputLine.length() - 6));
+//						formatedDateFromTxt = Integer.parseInt(inputLine.substring(inputLine.length() - 6));
 //						if (formatedStartDate <= formatedDateFromTxt && formatedDateFromTxt <= formatedEndDate) {
 //							System.out.println(formatedDateFromTxt);
 //							System.out.println(inputLine);
@@ -80,31 +85,60 @@ public class CurrencyController {
 						String resourceUrl = "http://www.nbp.pl/kursy/xml/" + inputLine + ".xml";
 						ResponseEntity<String> response
 								= restTemplate.getForEntity(resourceUrl, String.class);
-//						System.out.println(response.getBody());
-//						Document doc = convertStringToXMLDocument(response.getBody());
 
 						DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 						InputSource src = new InputSource();
-						src.setCharacterStream(new StringReader(response.getBody()));
+						src.setCharacterStream(new StringReader(Objects.requireNonNull(response.getBody())));
 						Document doc = builder.parse(src);
+						NodeList nodelist = doc.getElementsByTagName("pozycja");
+
 						String data_publikacji = doc.getElementsByTagName("data_publikacji").item(0).getTextContent();
-						String kurs_kupna = doc.getElementsByTagName("kurs_kupna").item(0).getTextContent();
 						LocalDate tempDate = LocalDate.parse(data_publikacji, formatter);
 						if ((start.isEqual(tempDate) || start.isBefore(tempDate)) && (end.isEqual(tempDate) || end.isAfter(tempDate))) {
-							System.out.println(data_publikacji);
+							System.out.println("date of publish: " + data_publikacji);
+//							System.out.println(inputLine);
+//							System.out.println("nodelist length: " + nodelist.getLength());
+							Node node;
+							boolean foundCurrencyCode = false;
+							Rate rate = new Rate();
+							outer:
+							for (int i = 0; i < nodelist.getLength(); i++) {
+								for (int j = 0; j < nodelist.item(i).getChildNodes().getLength(); j++) {
+									node = nodelist.item(i).getChildNodes().item(j);
+									if (node.getNodeType() == Node.ELEMENT_NODE) {
+										if (node.getTextContent().equals(exchange.getCurrencyCode())) {
+//											System.out.println(node.getNodeName() + ": " + node.getTextContent());
+											foundCurrencyCode = true;
+										}
+										if (foundCurrencyCode) {
+											if (node.getNodeName().equals("kurs_kupna")) {
+												rate.setBuyingRate(new BigDecimal(node.getTextContent().replace(",", ".")));
+//												System.out.println(node.getNodeName() + ": " + node.getTextContent());
+											}
+											if (node.getNodeName().equals("kurs_sprzedazy")) {
+												rate.setSellingRate(new BigDecimal(node.getTextContent().replace(",", ".")));
+												list.add(rate);
+//												System.out.println(node.getNodeName() + ": " + node.getTextContent());
+												break outer;
+											}
+										}
+									}
+								}
+							}
+						} else if (tempDate.isAfter(end)) {
+							break;
 						}
-//						System.out.println(kurs_kupna);
-
-//							Document doc = loadTestDocument("http://www.nbp.pl/kursy/xml/"+inputLine+".xml");
-//							System.out.println(doc);
-//						break;
-//						}
-//						System.out.println(formatedStartDate);
-//						System.out.println(formatedDateFromTxt);
 					}
 				}
 				in.close();
 			}
+			BigDecimal sumofBuyingRates = new BigDecimal(0);
+			for (Rate rate : list) {
+				sumofBuyingRates = sumofBuyingRates.add(rate.getBuyingRate());
+			}
+			System.out.println("sum of Selling Rates: " + sumofBuyingRates);
+			System.out.println("average of selling rates: "
+					+ sumofBuyingRates.divide(new BigDecimal(list.size()),4, RoundingMode.HALF_UP));
 			return "result";
 		} else {
 			String info = "Start date has to be after end date";
@@ -114,18 +148,5 @@ public class CurrencyController {
 
 	}
 
-	private Document convertStringToXMLDocument(String xmlString) throws ParserConfigurationException, IOException, SAXException {
-		//Parser that produces DOM object trees from XML content
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-		//API to obtain DOM Document instance
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		//Create DocumentBuilder with default configuration
-
-		//Parse the content to Document object
-		Document doc = builder.parse(new InputSource(new StringReader(xmlString)));
-		doc.getDocumentElement().normalize();
-		return doc;
-	}
 
 }
