@@ -1,6 +1,5 @@
 package pl.parser.nbp.controllers;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.NodeType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.net.URL;
 import java.time.LocalDate;
@@ -36,20 +36,20 @@ import pl.parser.nbp.model.Rate;
 
 public class CurrencyController {
 
-	public void exchangePost( Exchange exchange) throws Exception {
+	public void exchangePost(Exchange exchange) throws Exception {
 		List<Rate> list = new ArrayList<>();
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
 		LocalDate start = LocalDate.parse(exchange.getStartDate(), formatter);
 		LocalDate end = LocalDate.parse(exchange.getEndDate(), formatter);
-
+		System.out.println(exchange.getCurrencyCode());
 		System.out.println(start);
 		System.out.println(end);
 		if (start.isBefore(end)) {
 			int formatedStartDate = (start.getYear() % 100) * 10000 + start.getMonthValue() * 100 + start.getDayOfMonth();
 			int formatedEndDate = (end.getYear() % 100) * 10000 + end.getMonthValue() * 100 + end.getDayOfMonth();
-			System.out.println("Start: " + formatedStartDate);
-			System.out.println("End: " + formatedEndDate);
+//			System.out.println("Start: " + formatedStartDate);
+//			System.out.println("End: " + formatedEndDate);
 
 			for (LocalDate date = start; date.getYear() <= end.getYear(); date = date.plusYears(1)) {
 				String path;
@@ -84,7 +84,7 @@ public class CurrencyController {
 						String data_publikacji = doc.getElementsByTagName("data_publikacji").item(0).getTextContent();
 						LocalDate tempDate = LocalDate.parse(data_publikacji, formatter);
 						if ((start.isEqual(tempDate) || start.isBefore(tempDate)) && (end.isEqual(tempDate) || end.isAfter(tempDate))) {
-							System.out.println("date of publish: " + data_publikacji);
+//							System.out.println("date of publish: " + data_publikacji);
 //							System.out.println(inputLine);
 //							System.out.println("nodelist length: " + nodelist.getLength());
 							Node node;
@@ -121,13 +121,26 @@ public class CurrencyController {
 				}
 				in.close();
 			}
-			BigDecimal sumofBuyingRates = new BigDecimal(0);
+			BigDecimal sumofBuyingRates = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
 			for (Rate rate : list) {
 				sumofBuyingRates = sumofBuyingRates.add(rate.getBuyingRate());
 			}
-//			System.out.println("sum of Selling Rates: " + sumofBuyingRates);
-			System.out.println("average of selling rates: "
-					+ sumofBuyingRates.divide(new BigDecimal(list.size()),4, RoundingMode.HALF_UP));
+			BigDecimal avgOfBuyingRates = sumofBuyingRates.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP);
+			System.out.println(avgOfBuyingRates);
+
+			//standard deviation
+			BigDecimal sumOfSellingRates = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
+			for (Rate rate : list) {
+				sumOfSellingRates = sumOfSellingRates.add(rate.getSellingRate());
+			}
+			BigDecimal avgOfSellingRates = sumOfSellingRates.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP);
+			BigDecimal sumOfZ = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
+			for (Rate rate : list) {
+				sumOfZ = sumOfZ.add(((rate.getSellingRate().subtract(avgOfSellingRates)).pow(2)));
+			}
+			BigDecimal sigma = sumOfZ.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP);
+//			System.out.println(Math.sqrt(sigma.doubleValue()));
+			System.out.format("%.4f", Math.sqrt(sigma.doubleValue()));
 		} else {
 			String info = "Start date has to be after end date";
 			System.out.println(info);
