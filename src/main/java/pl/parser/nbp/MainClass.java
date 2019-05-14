@@ -20,7 +20,7 @@ public class MainClass implements CommandLineRunner {
 	private static final Logger logger = LoggerFactory.getLogger(MainClass.class);
 
 	public static void main(String[] args) {
-		SpringApplication.run(MainClass.class, args).close();
+		SpringApplication.run(MainClass.class, args);
 	}
 
 	@Override

@@ -62,13 +62,12 @@ public class CurrencyService {
 				in.close();
 			}
 			Calculation calculation = new Calculation();
-			if(listOfBuyingRates.isEmpty() && listOfSellingRates.isEmpty()) {
+			if (listOfBuyingRates.isEmpty() && listOfSellingRates.isEmpty()) {
 				return new HttpEntity<>("There were no publications in this period");
-			}else{
+			} else {
 				BigDecimal averageOfBuyingRates = calculation.avg(listOfBuyingRates);
 				BigDecimal stdDevOfSellingRates = calculation.stdDev(listOfSellingRates);
-				return new HttpEntity<>("Average buying rate: "+averageOfBuyingRates
-						+ "\nStandard Deviation of selling rate: " + stdDevOfSellingRates);
+				return new HttpEntity<>(averageOfBuyingRates + "\n" + stdDevOfSellingRates);
 //				return new HttpEntity<>(averageOfBuyingRates+"\n"+stdDevOfSellingRates);
 			}
 		} else {
