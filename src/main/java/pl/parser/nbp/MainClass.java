@@ -26,17 +26,13 @@ public class MainClass implements CommandLineRunner {
 	private static final Logger logger = LoggerFactory.getLogger(MainClass.class);
 
 	public static void main(String[] args) {
-		long start=System.nanoTime();
 		SpringApplication.run(MainClass.class, args).close();
-		long end=System.nanoTime();
-		System.out.println((end-start)/1000000);
-
 	}
 
 
 	@Override
 	public void run(String... args) throws Exception {
-//		System.out.println(port);
+		long start=System.nanoTime();
 		logger.info("Application started with command-line arguments: {} . \n To kill this application, press Ctrl + C.", Arrays.toString(args));
 		if (args.length == 3) {
 			Exchange exchange = new Exchange();
@@ -61,5 +57,7 @@ public class MainClass implements CommandLineRunner {
 			} catch (Exception e) {
 			}
 		}
+		long end=System.nanoTime();
+		System.out.println((end-start)/1000000);
 	}
 }
