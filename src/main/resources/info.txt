@@ -1,1 +1,0 @@
-wystarczy sprawdzić czy linia zaczyna się na c i wtedy jechać po kolejne wartości

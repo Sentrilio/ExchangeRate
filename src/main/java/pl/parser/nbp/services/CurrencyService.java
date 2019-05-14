@@ -31,7 +31,7 @@ import java.util.Objects;
 @Service
 public class CurrencyService {
 
-	public HttpEntity<String> getAvgAndStdDev(Exchange exchange) throws IOException, ParserConfigurationException, SAXException {
+	public HttpEntity<String> getAvgAndStdDev(Exchange exchange) throws Exception {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyy-MM-dd");
 		LocalDate startDate = LocalDate.parse(exchange.getStartDate(), formatter);
 		LocalDate endDate = LocalDate.parse(exchange.getEndDate(), formatter);
@@ -62,10 +62,17 @@ public class CurrencyService {
 				in.close();
 			}
 			Calculation calculation = new Calculation();
-			return new HttpEntity<>(calculation.avg(listOfBuyingRates) + "\n" + calculation.stddev(listOfSellingRates));
+			if(listOfBuyingRates.isEmpty() && listOfSellingRates.isEmpty()) {
+				return new HttpEntity<>("There were no publications in this period");
+			}else{
+				BigDecimal averageOfBuyingRates = calculation.avg(listOfBuyingRates);
+				BigDecimal stdDevOfSellingRates = calculation.stdDev(listOfSellingRates);
+				return new HttpEntity<>("Average buying rate: "+averageOfBuyingRates
+						+ "\nStandard Deviation of selling rate: " + stdDevOfSellingRates);
+//				return new HttpEntity<>(averageOfBuyingRates+"\n"+stdDevOfSellingRates);
+			}
 		} else {
-			String info = "Start date has to be after end date";
-			return new HttpEntity<>(info);
+			return new HttpEntity<>("Start date has to be after end date");
 		}
 	}
 

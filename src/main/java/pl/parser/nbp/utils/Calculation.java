@@ -17,7 +17,7 @@ public class Calculation {
 		return sum.divide(new BigDecimal(list.size()), RoundingMode.HALF_UP);
 	}
 
-	public BigDecimal stddev(List<BigDecimal> list) {
+	public BigDecimal stdDev(List<BigDecimal> list) {
 		return BigDecimalMathUtils.stddev(list,false,MathContext.DECIMAL128)
 				.setScale(4,RoundingMode.HALF_UP);
 	}
