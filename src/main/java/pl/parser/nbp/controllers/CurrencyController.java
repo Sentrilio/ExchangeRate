@@ -1,5 +1,6 @@
 package pl.parser.nbp.controllers;
 
+import com.jidesoft.utils.BigDecimalMathUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +27,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -33,6 +35,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import pl.parser.nbp.model.Rate;
+
+import static java.math.MathContext.*;
 
 public class CurrencyController {
 
@@ -121,7 +125,7 @@ public class CurrencyController {
 				}
 				in.close();
 			}
-			BigDecimal sumofBuyingRates = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
+			BigDecimal sumofBuyingRates = new BigDecimal(0).setScale(4, RoundingMode.HALF_UP);
 			for (Rate rate : list) {
 				sumofBuyingRates = sumofBuyingRates.add(rate.getBuyingRate());
 			}
@@ -129,18 +133,25 @@ public class CurrencyController {
 			System.out.println(avgOfBuyingRates);
 
 			//standard deviation
-			BigDecimal sumOfSellingRates = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
+			BigDecimal sumOfSellingRates = new BigDecimal(0).setScale(32, RoundingMode.HALF_UP);
+			List<BigDecimal> listOfSellingRates = new ArrayList<>();
 			for (Rate rate : list) {
+				listOfSellingRates.add(rate.getSellingRate());
 				sumOfSellingRates = sumOfSellingRates.add(rate.getSellingRate());
 			}
-			BigDecimal avgOfSellingRates = sumOfSellingRates.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP);
-			BigDecimal sumOfZ = new BigDecimal(0).setScale(4,RoundingMode.HALF_UP);
+			System.out.println(BigDecimalMathUtils.stddev(listOfSellingRates,false,MathContext.DECIMAL128).toString());
+
+			BigDecimal avgOfSellingRates = sumOfSellingRates.divide(new BigDecimal(list.size()), 32, RoundingMode.HALF_UP);
+			BigDecimal sumOfZ = new BigDecimal(0).setScale(32, RoundingMode.HALF_UP);
 			for (Rate rate : list) {
 				sumOfZ = sumOfZ.add(((rate.getSellingRate().subtract(avgOfSellingRates)).pow(2)));
 			}
-			BigDecimal sigma = sumOfZ.divide(new BigDecimal(list.size()), 4, RoundingMode.HALF_UP);
-//			System.out.println(Math.sqrt(sigma.doubleValue()));
-			System.out.format("%.4f", Math.sqrt(sigma.doubleValue()));
+			BigDecimal sigma = new BigDecimal(0).setScale(32,RoundingMode.HALF_UP);
+			sigma = sigma.add(sumOfZ.divide(new BigDecimal(list.size() ), 32, RoundingMode.HALF_UP));
+
+			System.out.println(Math.sqrt(sigma.doubleValue()));
+//			Math.pow(sigma.doubleValue(),1/2);
+//			System.out.format("%.4f", Math.sqrt(sigma.doubleValue()));
 		} else {
 			String info = "Start date has to be after end date";
 			System.out.println(info);
