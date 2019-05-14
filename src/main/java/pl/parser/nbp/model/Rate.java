@@ -3,6 +3,9 @@ package pl.parser.nbp.model;
 import java.math.BigDecimal;
 
 public class Rate {
+	public Rate(){
+
+	}
 
 	private BigDecimal buyingRate;
 	private BigDecimal sellingRate;
