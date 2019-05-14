@@ -7,7 +7,6 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalDouble;
 
 public class Calculation {
 
@@ -18,8 +17,8 @@ public class Calculation {
 		return sum.divide(new BigDecimal(list.size()), RoundingMode.HALF_UP);
 	}
 
-	public BigDecimal stddev(List<BigDecimal> listOfSellingRates) {
-		return BigDecimalMathUtils.stddev(listOfSellingRates,false,MathContext.DECIMAL128)
+	public BigDecimal stddev(List<BigDecimal> list) {
+		return BigDecimalMathUtils.stddev(list,false,MathContext.DECIMAL128)
 				.setScale(4,RoundingMode.HALF_UP);
 	}
 }

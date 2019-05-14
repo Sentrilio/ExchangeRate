@@ -32,7 +32,7 @@ public class MainClass implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		long start=System.nanoTime();
+		long start = System.nanoTime();
 		logger.info("Application started with command-line arguments: {} . \n To kill this application, press Ctrl + C.", Arrays.toString(args));
 		if (args.length == 3) {
 			Exchange exchange = new Exchange();
@@ -41,7 +41,7 @@ public class MainClass implements CommandLineRunner {
 			exchange.setEndDate(args[2]);
 			RestTemplate restTemplate = new RestTemplate();
 			try {
-				ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:"+port+"/exchange", exchange, String.class);
+				ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:" + port + "/exchange", exchange, String.class);
 				System.out.println(response.getBody());
 			} catch (Exception e) {
 			}
@@ -52,12 +52,13 @@ public class MainClass implements CommandLineRunner {
 			exchange.setEndDate("2013-01-31");
 			RestTemplate restTemplate = new RestTemplate();
 			try {
-				ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:"+port+"/exchange", exchange, String.class);
+				ResponseEntity<String> response = restTemplate.postForEntity("http://localhost:" + port + "/exchange", exchange, String.class);
 				System.out.println(response.getBody());
 			} catch (Exception e) {
 			}
 		}
-		long end=System.nanoTime();
-		System.out.println((end-start)/1000000);
+		long end = System.nanoTime();
+		logger.info("Time of executing method: {}", (end - start) / 1000000);
+//		System.out.println((end-start)/1000000);
 	}
 }
