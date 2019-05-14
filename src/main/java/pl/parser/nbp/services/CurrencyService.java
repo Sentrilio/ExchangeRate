@@ -42,8 +42,12 @@ public class CurrencyService {
 			int formatedEndDate = getFormatedStartDate(endDate);
 			for (LocalDate date = startDate; date.getYear() <= endDate.getYear(); date = date.plusYears(1)) {
 				String path = createNBPPath(date);
+				if (path == null) {
+					return new HttpEntity<>("Year must be between 2002-2019");
+				}
 				URL nbp = new URL(path);
 				BufferedReader in = new BufferedReader(new InputStreamReader(nbp.openStream()));
+
 				int formatedDateFromTxt;
 				String inputLine;
 				while ((inputLine = in.readLine()) != null) {
@@ -79,6 +83,7 @@ public class CurrencyService {
 		DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		InputSource src = new InputSource();
 		src.setCharacterStream(new StringReader(Objects.requireNonNull(response.getBody())));
+		System.out.println(response.getBody());
 		Document doc = builder.parse(src);
 		NodeList nodelist = doc.getElementsByTagName("pozycja");
 		Node node;
@@ -115,8 +120,10 @@ public class CurrencyService {
 		String path;
 		if (date.getYear() == 2019) {
 			path = "http://www.nbp.pl/kursy/xml/dir.txt";
-		} else {
+		} else if (date.getYear() >= 2002 && date.getYear() <= 2018) {
 			path = "http://www.nbp.pl/kursy/xml/dir" + date.getYear() + ".txt";
+		} else {
+			return null;
 		}
 		return path;
 	}

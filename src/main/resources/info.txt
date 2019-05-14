@@ -1,0 +1,1 @@
+dane z roku 2002,2003,2004 mają jakieś dziwne rzeczy (chyba odwołania w xmlu ----> <!DOCTYPE tabela_kursow SYSTEM "abch.dtd">)
